@@ -2,17 +2,22 @@ import uuid
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from db import stores
+from schemas import StoreSchema
+from models import StoreModel
+from db import db_data
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 blp = Blueprint("stores", __name__, description= "Operations on stores")
 
 @blp.route('/store/<string:store_id>')
 class Store(MethodView):
+    @blp.response(200, StoreSchema)
     def get(self, store_id):
         try:
             return stores[store_id], 200
         except KeyError:
             abort(404, message = "Store not found.")
+
 
     def delete(self, store_id):
         try:
@@ -21,40 +26,49 @@ class Store(MethodView):
         except KeyError:
             abort(404, message= "Store not found")
 
-    def update(self, store_id):
-        store = request.get_data()
-        if "name" not in store or "store_id" not in store:
-            abort(400, message = "Ensure that you are sending all the required fields")
 
+    @blp.arguments(StoreSchema)
+    @blp.response(201, StoreSchema)
+    def put(self,store_data, store_id):
         try:
             u_store = stores[store_id]
-            u_store |= store
+            u_store |= store_data
 
             return u_store
         
         except KeyError:
             abort(404, message= "Store not found")
 
+
+
 @blp.route('/store')
 class StoreList(MethodView):
+    @blp.response(200, StoreSchema(many= True))
     def get(self):
-        return {'store' : list(stores.values())}, 200
+        return stores.values()
+    
 
-    def post(self):
-        store = request.get_json()
-        if (
-        "name" not in store
-        ):
-            abort(400, message= "Required fields missing, check that you are sending the: name and price")
-
-        for exist in stores.values():
-            if(
-                store['name'] == exist['name']
-            ):
-                abort(400, message= "Already existing Store!")
-        store_id = uuid.uuid4().hex
-        new_store = {**store, 'id': store_id}
-        stores[store_id] = new_store
-        return new_store, 201
+    @blp.arguments(StoreSchema)
+    @blp.response(201, StoreSchema)
+    def post(self, store_data):
+        store = Store(**store_data)
+        try:
+            db_data.session.add(store)
+            db_data.session.commit()
+        
+        except IntegrityError:
+            abort(
+                400,
+                message= "A store with that name already exists"
+            )
+        
+        except SQLAlchemyError as e :
+            print(f"The error that occured was :{e}")
+            abort(
+                500,
+                message= "An error occured while creating the store"
+            )
+        return store
+    
 
 
