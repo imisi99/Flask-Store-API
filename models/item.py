@@ -1,4 +1,4 @@
-from db import db_data
+from schemas.db import db_data
 class ItemModel(db_data.Model):
 
     __tablename__ = "items"

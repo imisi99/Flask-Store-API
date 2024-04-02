@@ -1,11 +1,10 @@
-import uuid
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models import ItemModel
-from db import db_data
-from schemas import Itemschemas, ItemUpdateSchemas
-from sqlalchemy.exc import SQLAlchemyError
+from schemas.db import db_data
+from schemas.schemas import Itemschemas, ItemUpdateSchemas
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 blp = Blueprint("items", __name__, description= "Operating on items")
 
@@ -14,51 +13,91 @@ class List(MethodView):
     @blp.response(200, Itemschemas)
     def get(self, item_id):
         try:
-            return item[item_id], 200
-        except KeyError:
-            abort(404, message = "Item not found.")
+            item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
+            if item is not None:
+                return item
+            else:
+                abort(
+                    404,
+                    message= "Item not found!"
+                )
+            
+        except SQLAlchemyError:
+            abort(500,
+                  message = "An error occured while trying to fetch data from the database")
 
 
 
     @blp.arguments(ItemUpdateSchemas)
     @blp.response(201, Itemschemas)
-    def put(self, item_data, item_id):
+    def put(self, data, item_id):
         try:
-            u_item = item[item_id]
-            u_item |= item_data
+            item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
+            if item is None:
+                abort(
+                    404,
+                    message = "Item not found!"
+                )
+            else:
+                item.name = data["name"]
+                item.price = data["price"]
 
-            return u_item
-        
-        except KeyError:
-            abort(404, message= "Item not found")
+                db_data.session.add(item)
+                db_data.session.commit()
+
+                return item
+        except SQLAlchemyError:
+            abort(500,
+                message= "An error occured while trying to update the data!")
 
     
     def delete(self, item_id):
             try:
-                del item[item_id]
-                return "Item Deleted successfully"
-            
-            except KeyError:
-                abort(404, message= "Item not found")
+                item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
+                if item is None:
+                    abort(
+                        404,
+                        message= "Item not found!"
+                    )
+                
+                else:
+                    db_data.session.delete(item)
+                    db_data.session.commit()
+
+                    return "Item has been deleted successfully!"
+                
+            except SQLAlchemyError:
+                abort(500,
+                      message = "An error occured while trying to delete the data")
+
 
 
 @blp.route('/item')
 class ItemList(MethodView):
     @blp.response(200, Itemschemas(many= True))
     def get(self):
-        return item.values()
+        item = db_data.session.query(ItemModel).all()
+        if item is not None:
+            return item
+        return "There are no items in the db"
     
 
     @blp.arguments(Itemschemas)
     @blp.response(201, Itemschemas)
     def post(self, data):
-        item = Item(**data)
+        item = ItemModel(**data)
 
         try:
             db_data.session.add(item)
             db_data.session.commit()
+
+        except IntegrityError:
+            abort(400, message= "An item with that name already exists!")
         
-        except SQLAlchemyError:
-            abort(500, message= "An error occured while collecting data, Please try again later")
+        except SQLAlchemyError as e :
+            print(f"The error that occured was: {e}")
+            abort(500,
+                   message= "An error occured while creating the item")
+
         return item
     
