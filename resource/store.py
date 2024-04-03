@@ -1,7 +1,7 @@
 from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from schemas.schemas import StoreSchema
+from schemas.schemas import StoreSchemas
 from models import StoreModel
 from schemas.db import db_data
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -10,7 +10,7 @@ blp = Blueprint("stores", __name__, description= "Operations on stores")
 
 @blp.route('/store/<string:store_id>')
 class Store(MethodView):
-    @blp.response(200, StoreSchema)
+    @blp.response(200, StoreSchemas)
     def get(self, store_id):
         #store = StoreModel.query.get_or_404(store_id)
             try:
@@ -45,7 +45,7 @@ class Store(MethodView):
 
 
 
-    @blp.arguments(StoreSchema)
+    @blp.arguments(StoreSchemas)
     @blp.response(201)
     def put(self,store_data, store_id):
         try:
@@ -71,7 +71,7 @@ class Store(MethodView):
 
 @blp.route('/store')
 class StoreList(MethodView):
-    @blp.response(200, StoreSchema(many= True))
+    @blp.response(200, StoreSchemas(many= True))
     def get(self):
         try:
             store = db_data.session.query(StoreModel).all()
@@ -83,8 +83,8 @@ class StoreList(MethodView):
             abort(500,
                   message= "An error occured while trying to retrieve the data!")
 
-    @blp.arguments(StoreSchema)
-    @blp.response(201, StoreSchema)
+    @blp.arguments(StoreSchemas)
+    @blp.response(201, StoreSchemas)
     def post(self, store_data):
         store = StoreModel(**store_data)
         try:

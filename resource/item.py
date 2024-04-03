@@ -3,14 +3,14 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models import ItemModel
 from schemas.db import db_data
-from schemas.schemas import Itemschemas, ItemUpdateSchemas
+from schemas.schemas import ItemSchemas, ItemUpdateSchemas
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 blp = Blueprint("items", __name__, description= "Operating on items")
 
 @blp.route('/item/<string:item_id>')
 class List(MethodView):
-    @blp.response(200, Itemschemas)
+    @blp.response(200, ItemSchemas)
     def get(self, item_id):
         try:
             item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
@@ -29,7 +29,7 @@ class List(MethodView):
 
 
     @blp.arguments(ItemUpdateSchemas)
-    @blp.response(201, Itemschemas)
+    @blp.response(201, ItemSchemas)
     def put(self, data, item_id):
         try:
             item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
@@ -74,7 +74,7 @@ class List(MethodView):
 
 @blp.route('/item')
 class ItemList(MethodView):
-    @blp.response(200, Itemschemas(many= True))
+    @blp.response(200, ItemSchemas(many= True))
     def get(self):
         item = db_data.session.query(ItemModel).all()
         if item is not None:
@@ -82,8 +82,8 @@ class ItemList(MethodView):
         return "There are no items in the db"
     
 
-    @blp.arguments(Itemschemas)
-    @blp.response(201, Itemschemas)
+    @blp.arguments(ItemSchemas)
+    @blp.response(201, ItemSchemas)
     def post(self, data):
         item = ItemModel(**data)
 
