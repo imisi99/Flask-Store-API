@@ -1,2 +1,6 @@
 # Flask-Pizza-api
-This is a pizza order api created using Flask for the framework and PostgresSQL for the database, with jwt authentication and authorization
+This is a store api that is built with flask and postgresql
+It uses jwt for user authentication and authorization
+It lets users:
+- Create Items, Stores and Tags
+- 

@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_migrate import Migrate
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from resource.item import blp as ItemBlueprint
@@ -7,12 +8,15 @@ from resource.user import blp as UserBlueprint
 from resource.tag import blp as TagBlueprint
 from schemas.db import db_data
 from blocklist import BLOCKLIST
+from dotenv import load_dotenv
 import models
 import os
 
 
 def create_app(db_url= None):
     app = Flask(__name__)
+
+    load_dotenv()
 
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "STORES API"
@@ -24,6 +28,8 @@ def create_app(db_url= None):
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///database.sqlite")
     app.config["SQLALCHEMY_TRACK_MODIFICATION"] = False
     db_data.init_app(app)
+
+    migrate = Migrate(app, db_data)
     api = Api(app)
 
 
@@ -91,8 +97,6 @@ def create_app(db_url= None):
     #JWT configuration ends 
 
 
-    with app.app_context():
-        db_data.create_all()
 
 
     api.register_blueprint(ItemBlueprint)
