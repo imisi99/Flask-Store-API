@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models import TagModel, ItemModel, StoreModel
@@ -11,6 +12,7 @@ blp = Blueprint("tags", __name__, description= "Operation on tags")
 
 @blp.route("/store/<string:store_id>/tag")
 class TagsInStore(MethodView):
+
     @blp.response(200, TagSchemas(many=True))
     def get(self, store_id):
         try:
@@ -27,6 +29,8 @@ class TagsInStore(MethodView):
             abort(500,
                   message = "An error occured while interacting with the db")
         
+
+    @jwt_required()
     @blp.arguments(TagSchemas)
     @blp.response(201, TagSchemas)
     def post(self, tag_data, store_id):
@@ -53,6 +57,7 @@ class TagsInStore(MethodView):
 
 @blp.route('/item/<string:item_id>/tag/<string:tag_id>')
 class LinkTagsToItem(MethodView):
+    @jwt_required()
     @blp.response(201, TagSchemas)
     def post(self, item_id, tag_id):
         item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
@@ -80,7 +85,7 @@ class LinkTagsToItem(MethodView):
             
         return tag
     
-
+    @jwt_required(fresh= True)
     @blp.response(200, TagAndItemSchemas)
     def delete(self, item_id, tag_id):
         item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
@@ -123,6 +128,8 @@ class Tag(MethodView):
 
         return tag
     
+
+    @jwt_required(fresh= True)
     @blp.response(
         202,
         description= "Deletes a tag if no item is tagged with it.",

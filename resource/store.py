@@ -1,5 +1,6 @@
 from flask import request
 from flask.views import MethodView
+from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 from schemas.schemas import StoreSchemas
 from models import StoreModel
@@ -25,7 +26,7 @@ class Store(MethodView):
                        message= "An error occured while retrieving the data!")
 
 
-
+    @jwt_required(fresh= True)
     def delete(self, store_id):
             try:
                 store = db_data.session.query(StoreModel).filter(StoreModel.id == store_id).first()
@@ -44,7 +45,7 @@ class Store(MethodView):
             
 
 
-
+    @jwt_required()
     @blp.arguments(StoreSchemas)
     @blp.response(201)
     def put(self,store_data, store_id):
@@ -82,7 +83,9 @@ class StoreList(MethodView):
         except SQLAlchemyError:
             abort(500,
                   message= "An error occured while trying to retrieve the data!")
-
+            
+            
+    @jwt_required()
     @blp.arguments(StoreSchemas)
     @blp.response(201, StoreSchemas)
     def post(self, store_data):

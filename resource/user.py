@@ -82,6 +82,14 @@ class User(MethodView):
     @blp.response(200, UserSchemas)
     def get(self, user_id):
         try:
+            current_user_id = get_jwt_identity()
+
+            if user_id != current_user_id:
+                abort(
+                    403,
+                    message = "Access Denied!"
+
+                )
             user = db_data.session.query(UserModel).filter(UserModel.id == user_id).first()
             if not user:
                 abort(
@@ -95,9 +103,18 @@ class User(MethodView):
             abort(500,
                   message = "An error occured while trying to get data from the db!")
             
+
     @jwt_required(fresh= True)
     def delete(self, user_id):
         try:
+            current_user_id = get_jwt_identity()
+
+            if user_id != current_user_id:
+                abort(
+                    403,
+                    message = "Access Denied!"
+                )
+
             user = db_data.session.query(UserModel).filter(UserModel.id == user_id).first()
             if not user:
                 abort(

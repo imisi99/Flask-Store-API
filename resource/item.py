@@ -1,4 +1,5 @@
 from flask import request
+from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from models import ItemModel
@@ -27,7 +28,7 @@ class List(MethodView):
                   message = "An error occured while trying to fetch data from the database")
 
 
-
+    @jwt_required()
     @blp.arguments(ItemUpdateSchemas)
     @blp.response(201, ItemSchemas)
     def put(self, data, item_id):
@@ -50,7 +51,7 @@ class List(MethodView):
             abort(500,
                 message= "An error occured while trying to update the data!")
 
-    
+    @jwt_required(fresh= True)
     def delete(self, item_id):
             try:
                 item = db_data.session.query(ItemModel).filter(ItemModel.id == item_id).first()
@@ -81,7 +82,7 @@ class ItemList(MethodView):
             return item
         return "There are no items in the db"
     
-
+    @jwt_required()
     @blp.arguments(ItemSchemas)
     @blp.response(201, ItemSchemas)
     def post(self, data):
