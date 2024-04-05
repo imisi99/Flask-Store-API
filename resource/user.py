@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_mail import Mail, Message
 from flask import current_app
 import os
@@ -19,7 +19,7 @@ from flask_jwt_extended import (
 from blocklist import BLOCKLIST
 from rq import Queue
 import redis
-from task import send_simple_message, send_user_registration_email
+from task import send_simple_message, send_user_registration_email, send_email
 
 blp = Blueprint("users", __name__, description= "Operating on users")
 
@@ -63,8 +63,16 @@ class Signup(MethodView):
                 subject= "Successfully Signed up!",
                 body= f"Hi {data.username} you have successfully signed up to the Stores API"
             )
+            try:
+                send_email(subject= "Successfully Signed up!",
+                        sender= "Isong Imisioluwa",
+                        username= data.username,
+                        recipients= data.email)
             
-            return {"message" : "Account has been created successfully!"}, 201
+            except Exception as e:
+                return jsonify({"message" : "Failed to send email", "error" : str(e)}), 500
+            
+            return {"message" : "Account has been created successfully, check your email for a message!"}, 201
         
         except SQLAlchemyError:
             abort(500,

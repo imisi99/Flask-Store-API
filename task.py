@@ -1,3 +1,5 @@
+from flask import current_app
+from flask_mail import Message
 import os
 import requests
 from dotenv import load_dotenv
@@ -22,5 +24,14 @@ def send_user_registration_email(email, username):
 	return send_simple_message(
 		email,
 		"Successfully Signed up!",
-		f"Hi {username} you have successfully signed up to the Stores API"
+		f"Hi {username} you have successfully signed up to the Stores API,"
     )
+
+def send_email(subject, sender, recipients, username,  html= None):
+	msg = Message(subject, sender, recipients= recipients)
+	msg.body = f"{username}, you have successfully created an account, We are Happy to have you onboard on this API "
+	if  html:
+		msg.html = html
+	
+	mail = current_app.extensions['mail']
+	mail.send(msg)

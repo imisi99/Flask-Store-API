@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_smorest import Api
+from flask_mail import Mail, Message
 from flask_jwt_extended import JWTManager
 from resource.item import blp as ItemBlueprint
 from resource.store import blp as StoreBlueprint
@@ -36,6 +37,14 @@ def create_app(db_url= None):
     app.config["SQLALCHEMY_TRACK_MODIFICATION"] = False
     db_data.init_app(app)
 
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNMAE'] = 'storesapi23@gmail.com'
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+
+    mail = Mail(app)
+    
     migrate = Migrate(app, db_data)
     api = Api(app)
 
