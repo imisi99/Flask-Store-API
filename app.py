@@ -40,7 +40,7 @@ def create_app(db_url= None):
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'storesapi23@gmail.com'
+    app.config['MAIL_USERNAME'] = 'isongrichard234@gmail.com'
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
     mail = Mail(app)
