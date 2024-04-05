@@ -13,8 +13,8 @@ Some other functions of the API are:
 
 You can run the api locally by these methods:
 - To run the api you can use docker or python virtual environment 
-- To run the api locally on docker you can access the command [here](https:/github.com/imisi99/Flask-Store)
+- To run the api locally on docker you can access the command [here](https://github.com/imisi99/Flask-Store-API/blob/main/CONTRIBUTING.md)
 - To run the api locally on your python virtual venv run the command (pip install -r requirements.txt)
-- The swaager-ui view of the api is [here](https://)
+- The swaager-ui view of the api is [here](https://flask-store-api-vvs7.onrender.com/swagger-ui)
 - You can reach me for any request or issue on [gmail](mailto:isongrichard234@gmail.com)
 
