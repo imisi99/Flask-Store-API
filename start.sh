@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gunicorn app:create_app()
+gunicorn "app:create_app()"
