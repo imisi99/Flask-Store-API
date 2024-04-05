@@ -11,6 +11,8 @@ from blocklist import BLOCKLIST
 from dotenv import load_dotenv
 import models
 import os
+import redis
+from rq import Queue
 
 
 def create_app(db_url= None):
@@ -18,6 +20,11 @@ def create_app(db_url= None):
 
     load_dotenv()
 
+    connection= redis.from_url(
+        os.getenv('REDIS_URL')
+    )
+    
+    app.queue = Queue("email", connection= connection)
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "STORES API"
     app.config["API_VERSION"] = "v1"

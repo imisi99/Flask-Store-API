@@ -1,7 +1,10 @@
 from flask import Flask
+from flask_mail import Mail, Message
+from flask import current_app
+import os
 from flask_smorest import Blueprint, abort
 from flask.views import MethodView
-from schemas.schemas import UserSchemas
+from schemas.schemas import UserSchemas, UserRegisterSchema
 from models import UserModel
 from sqlalchemy.exc import SQLAlchemyError
 from schemas.db import db_data
@@ -14,31 +17,53 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 from blocklist import BLOCKLIST
+from rq import Queue
+import redis
+from task import send_simple_message, send_user_registration_email
 
 blp = Blueprint("users", __name__, description= "Operating on users")
 
+
+
+
 @blp.route('/user/register')
 class Signup(MethodView):
-    @blp.arguments(UserSchemas)
+    @blp.arguments(UserRegisterSchema)
     @blp.response(201)   
     def post(self, user_data):
         try:
             user = db_data.session.query(UserModel).filter(UserModel.username == user_data["username"]).first()
+            email = db_data.session.query(UserModel).filter(UserModel.email == user_data["email"]).first()
             if user:
                 abort(
                     409,
                     message= "An account with that username already exists"
                 )
+
+            if email:
+                abort(
+                    409,
+                    message = "An account with that email already exists"
+                )
             
 
             data = UserModel(
                 username = user_data["username"],
+                email = user_data["email"],
                 password = pbkdf2_sha256.hash(user_data["password"])
             )
 
             db_data.session.add(data)
             db_data.session.commit()
+            
+            current_app.queue.enqueue(send_user_registration_email, data.email, data.username)
 
+            send_simple_message(
+                to= data.email,
+                subject= "Successfully Signed up!",
+                body= f"Hi {data.username} you have successfully signed up to the Stores API"
+            )
+            
             return {"message" : "Account has been created successfully!"}, 201
         
         except SQLAlchemyError:
