@@ -28,7 +28,7 @@ def send_user_registration_email(email, username):
     )
 
 def send_email(subject, sender, recipients, username,  html= None):
-	msg = Message(subject, sender, recipients= recipients)
+	msg = Message(subject, sender= sender, recipients= recipients)
 	msg.body = f"{username}, you have successfully created an account, We are Happy to have you onboard on this API "
 	if  html:
 		msg.html = html
