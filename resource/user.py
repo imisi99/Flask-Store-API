@@ -67,7 +67,7 @@ class Signup(MethodView):
                 send_email(subject= "Successfully Signed up!",
                         sender= "Isong Imisioluwa",
                         username= data.username,
-                        recipients= data.email)
+                        recipients= [data.email])
             
             except Exception as e:
                 return jsonify({"message" : "Failed to send email", "error" : str(e)}), 500
