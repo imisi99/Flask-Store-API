@@ -63,17 +63,20 @@ class Signup(MethodView):
                 subject= "Successfully Signed up!",
                 body= f"Hi {data.username} you have successfully signed up to the Stores API"
             )
-        
-            msg = Message(
-                'Hello',
-                sender= "isongrichard234@gmail.com",
-                recipients= [data.email]
-            )
-            msg.body = f"Hello {data.username}, We are glad to have you on board with us on this journey. Congratulations on Signing up for the Stores API"
-            with current_app.app_context():
-                current_app.extensions['mail'].send(msg)
+            try:
+                msg = Message(
+                    'Hello',
+                    sender= "isongrichard234@gmail.com",
+                    recipients= [data.email]
+                )
+                msg.body = f"Hello {data.username}, We are glad to have you on board with us on this journey. Congratulations on Signing up for the Stores API"
+                with current_app.app_context():
+                    current_app.extensions['mail'].send(msg)
+                return "Account has been ccreated successfully, check your mail for verification!"
+            except Exception as e:
+                return jsonify({"message": "Failed to send email!","error": str(e)}), 500
 
-            return "Account has been ccreated successfully, check your mail for verification!"
+           
         except SQLAlchemyError:
             abort(500,
                   message = "An error occured while pushing data to the database")
