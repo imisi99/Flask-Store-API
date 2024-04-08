@@ -19,7 +19,7 @@ from flask_jwt_extended import (
 from blocklist import BLOCKLIST
 from rq import Queue
 import redis
-from task import send_simple_message, send_user_registration_email, send_email
+from task import send_simple_message, send_user_registration_email
 
 blp = Blueprint("users", __name__, description= "Operating on users")
 
@@ -52,9 +52,9 @@ class Signup(MethodView):
                 email = user_data["email"],
                 password = pbkdf2_sha256.hash(user_data["password"])
             )
-
             db_data.session.add(data)
             db_data.session.commit()
+
             
             current_app.queue.enqueue(send_user_registration_email, data.email, data.username)
 
@@ -63,17 +63,17 @@ class Signup(MethodView):
                 subject= "Successfully Signed up!",
                 body= f"Hi {data.username} you have successfully signed up to the Stores API"
             )
-            try:
-                send_email(subject= "Successfully Signed up!",
-                        sender= "Isong Imisioluwa",
-                        username= data.username,
-                        recipients= [data.email])
-            
-            except Exception as e:
-                return jsonify({"message" : "Failed to send email", "error" : str(e)}), 500
-            
-            return {"message" : "Account has been created successfully, check your email for a message!"}, 201
         
+            msg = Message(
+                'Hello',
+                sender= "isongrichard234@gmail.com",
+                recipients= [data.email]
+            )
+            msg.body = f"Hello {data.username}, We are glad to have you on board with us on this journey. Congratulations on Signing up for the Stores API"
+            with current_app.app_context():
+                current_app.extensions['mail'].send(msg)
+
+            return "Account has been ccreated successfully, check your mail for verification!"
         except SQLAlchemyError:
             abort(500,
                   message = "An error occured while pushing data to the database")
